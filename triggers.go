@@ -1,33 +1,40 @@
 package main
 
-import "trigger-queue/sensors"
+import (
+	"strconv"
+	"trigger-queue/sensors"
+
+	"github.com/sirupsen/logrus"
+)
 
 type Trigger func(interface{}) bool
 
 var Scale = new(sensors.Scale).GetInstance()
 var Thermometer = new(sensors.Thermometer).GetInstance()
 
-func compareSensorReading(t string, getVal func() int) Trigger {
+func compareSensorReading(t string, getVal func() float64) Trigger {
 	switch t {
 	case ">":
 		return func(val interface{}) bool {
-			return val.(int) > getVal()
+			logrus.Info(strconv.FormatFloat(val.(float64), 'f', 6, 64) + ">" + strconv.FormatFloat(getVal(), 'f', 6, 64))
+			logrus.Info(val.(float64) > getVal())
+			return val.(float64) > getVal()
 		}
 	case ">=":
 		return func(val interface{}) bool {
-			return val.(int) >= getVal()
+			return val.(float64) >= getVal()
 		}
 	case "<":
 		return func(val interface{}) bool {
-			return val.(int) < getVal()
+			return val.(float64) < getVal()
 		}
 	case "<=":
 		return func(val interface{}) bool {
-			return val.(int) <= getVal()
+			return val.(float64) <= getVal()
 		}
 	case "==":
 		return func(val interface{}) bool {
-			return val.(int) == getVal()
+			return val.(float64) == getVal()
 		}
 	default:
 		return func(val interface{}) bool {

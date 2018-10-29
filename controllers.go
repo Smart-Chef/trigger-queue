@@ -44,7 +44,7 @@ var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&req)
 	w.Header().Set("Content-Type", "application/json")
 
-	q, ok := Trigger_Queue[req.Service]
+	q, ok := TriggerQueue[req.Service]
 	if !ok {
 		handleBadRequest(w, "Unrecognized Service \""+req.Service+"\"")
 		return
@@ -76,7 +76,7 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	service := params["service"]
 
 	id, _ = strconv.ParseInt(params["id"], 10, 0)
-	q := Trigger_Queue[service]
+	q := TriggerQueue[service]
 	success := q.RemoveID(id)
 
 	if success {
@@ -98,7 +98,7 @@ var clearQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	service := params["service"]
 
-	q, ok := Trigger_Queue[service]
+	q, ok := TriggerQueue[service]
 
 	if !ok {
 		handleBadRequest(w, "No service \""+service+"\"")
@@ -115,7 +115,7 @@ var clearQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 var showQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	service := mux.Vars(r)["service"]
-	q, ok := Trigger_Queue[service]
+	q, ok := TriggerQueue[service]
 
 	if !ok {
 		handleBadRequest(w, "Invalid service \""+service+"\"")
@@ -126,13 +126,13 @@ var showQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 var showAllQueues = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	type Response struct {
-		Status string `json:"status"`
-		Body   map[string]*queue.Queue
+		Status string                  `json:"status"`
+		Body   map[string]*queue.Queue `json:"body"`
 	}
 	w.Header().Set("Content-Type", "application/json")
 	body := make(map[string]*queue.Queue)
 
-	for k, q := range Trigger_Queue {
+	for k, q := range TriggerQueue {
 		body[k] = q
 	}
 
@@ -144,5 +144,6 @@ var showAllQueues = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 
 // Server testing controllers
 var Pong = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	log.Info("Pong!")
 	w.Write([]byte("Pong!\n"))
 })

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -16,8 +15,9 @@ func sendDataHelper(service string) Action {
 			log.Fatal(err)
 		}
 
-		fmt.Println("Sending the following to " + service)
-		fmt.Printf("%s\n", data)
+		log.Info("Sending the following to " + service)
+		log.Info("%s\n", string(data))
+		// TODO: actually send the data
 	}
 }
 

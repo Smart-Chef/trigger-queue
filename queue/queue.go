@@ -20,7 +20,7 @@ type Queue struct {
 
 func (q *Queue) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		Items map[int64]interface{} `json:"Items"`
+		Items map[int64]interface{} `json:"items"`
 	}{
 		Items: q.items,
 	})
@@ -159,6 +159,26 @@ func (q *Queue) Front() interface{} {
 		return q.items[id]
 	}
 	return nil
+}
+
+// Evaluate Front Element element at the front of queue
+func (q *Queue) EvaluateFront(tf func(interface{}) bool, af func(interface{})) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	id := q.buf[q.head]
+	if id != 0 {
+		if tf(q.items[id]) {
+			af(q.items[id])
+
+			elem, _ := q.items[id]
+			//if !ok {
+			//	return false
+			//}
+			delete(q.ids, elem)
+			delete(q.items, id)
+		}
+	}
 }
 
 // Previews element at the back of queue

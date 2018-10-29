@@ -5,9 +5,11 @@ import (
 	"errors"
 	"time"
 	"trigger-queue/queue"
+
+	"github.com/sirupsen/logrus"
 )
 
-var Trigger_Queue = map[string]*queue.Queue{
+var TriggerQueue = map[string]*queue.Queue{
 	"nlp":          queue.New(),
 	"walk-through": queue.New(),
 }
@@ -79,5 +81,32 @@ func createJob(subscriber string, triggerKeys []string, triggerParams []interfac
 		CreatedAt:     time.Now(),
 	}
 
+	out, _ := json.Marshal(j)
+	logrus.Info("Created Job", out)
 	return j, nil
+}
+
+func executeTrigger(j interface{}) bool {
+	if j == nil {
+		return false
+	}
+	var trigger Trigger
+	var triggerParam interface{}
+	job := j.(*Job)
+	i := 0
+	passed := true
+
+	for passed && i < len(job.Triggers) {
+		trigger = job.Triggers[i]
+		triggerParam = job.TriggerParams[i]
+		passed = trigger(triggerParam)
+		i++
+	}
+	return passed
+}
+
+func executeAction(j interface{}) {
+	logrus.Info("Executing Action")
+	job := j.(*Job)
+	job.Action(job.ActionParams)
 }

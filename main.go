@@ -57,8 +57,11 @@ func main() {
 
 	// Run the trigger queue consumer thread
 	go func() {
-		for k, _ := range Trigger_Queue {
-			log.Info(k)
+		for {
+			for _, q := range TriggerQueue {
+				q.EvaluateFront(executeTrigger, executeAction)
+			}
+			time.Sleep(2 * time.Second)
 		}
 	}()
 
@@ -81,8 +84,4 @@ func main() {
 	// to finalize based on context cancellation.
 	//Info.Println("shutting down")
 	os.Exit(0)
-
-	//log.Fatal("MAYDAY MAYDAY MAYDAY. Execution will be stopped here")
-	//log.Panic("Do not panic")
-
 }

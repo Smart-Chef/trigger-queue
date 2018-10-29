@@ -18,7 +18,7 @@ func (Thermometer) setupThermometer() *Thermometer {
 }
 
 // GetTemp gets the current temperature value from the thermometer
-func (*Thermometer) GetTemp() int {
+func (*Thermometer) GetTemp() float64 {
 	// TODO: get temp from sensor
 	return 200
 }
