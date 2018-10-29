@@ -1,6 +1,8 @@
 package sensors
 
-import "sync"
+import (
+	"sync"
+)
 
 var scaleInstance *Scale
 var scaleOnce sync.Once
