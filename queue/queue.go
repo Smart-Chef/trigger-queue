@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"encoding/json"
 	"math/rand"
 	"sync"
 )
@@ -15,6 +16,14 @@ type Queue struct {
 	mutex             *sync.Mutex
 	notEmpty          *sync.Cond
 	NotEmpty          chan struct{}
+}
+
+func (q *Queue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Items map[int64]interface{} `json:"Items"`
+	}{
+		Items: q.items,
+	})
 }
 
 func New() *Queue {
@@ -82,7 +91,7 @@ func (q *Queue) notify() {
 }
 
 // Adds one element at the back of the queue
-func (q *Queue) Append(elem interface{}) {
+func (q *Queue) Append(elem interface{}) int64 {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
@@ -103,6 +112,7 @@ func (q *Queue) Append(elem interface{}) {
 	if q.count == 1 {
 		q.notEmpty.Broadcast()
 	}
+	return id
 }
 
 func (q *Queue) newId() int64 {
@@ -213,6 +223,20 @@ func (q *Queue) Remove(elem interface{}) bool {
 	defer q.mutex.Unlock()
 
 	id, ok := q.ids[elem]
+	if !ok {
+		return false
+	}
+	delete(q.ids, elem)
+	delete(q.items, id)
+	return true
+}
+
+// Removes one element from the queue by ID
+func (q *Queue) RemoveID(id int64) bool {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	elem, ok := q.items[id]
 	if !ok {
 		return false
 	}

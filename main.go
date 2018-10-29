@@ -6,16 +6,10 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	"trigger-queue/queue"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
-
-var TriggerQs = map[string]*queue.Queue{
-	"nlp":          queue.New(),
-	"walk-through": queue.New(),
-}
 
 func main() {
 	// Setup logger
@@ -44,9 +38,6 @@ func main() {
 	// Walk all the routes
 	r.Walk(RouteWalker)
 
-	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(":8000", r))
-
 	// Start server
 	srv := &http.Server{
 		Handler: r,
@@ -66,11 +57,9 @@ func main() {
 
 	// Run the trigger queue consumer thread
 	go func() {
-		sum := 1
-		for sum < 1000 {
-			sum += sum
+		for k, _ := range Trigger_Queue {
+			log.Info(k)
 		}
-		log.Info(sum)
 	}()
 
 	c := make(chan os.Signal, 1)

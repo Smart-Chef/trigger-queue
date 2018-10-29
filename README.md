@@ -11,3 +11,9 @@ go build
 ./trigger-queue
 ```
 
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"action":"xyz","password":"xyz"}' \
+  http://localhost:8000/api/add/nlp
+```

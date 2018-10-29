@@ -51,15 +51,34 @@ var AllRoutes = [...]Endpoint{
 	{
 		path: "/ping",
 		methods: map[string]http.Handler{
-			http.MethodGet:  YourHandler,
-			http.MethodPost: YourHandler,
+			http.MethodGet:  Pong,
+			http.MethodPost: Pong,
+		},
+	}, {
+		path: "/add/{service}",
+		methods: map[string]http.Handler{
+			http.MethodPost: addJob,
+		},
+	}, {
+		path: "/delete/{service}/{id}",
+		methods: map[string]http.Handler{
+			http.MethodPost: deleteJob,
+		},
+	}, {
+		path: "/clear/{service}",
+		methods: map[string]http.Handler{
+			http.MethodPost: clearQueue,
+		},
+	}, {
+		path: "/show",
+		methods: map[string]http.Handler{
+			http.MethodGet: showAllQueues,
 		},
 		subRoutes: []Endpoint{
 			{
-				path: "/{id}",
+				path: "/{service}",
 				methods: map[string]http.Handler{
-					http.MethodGet: getBook,
-					//http.MethodDelete: deleteBook,
+					http.MethodGet: showQueue,
 				},
 			},
 		},
