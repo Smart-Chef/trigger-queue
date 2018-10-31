@@ -16,7 +16,7 @@ func sendDataHelper(service string) Action {
 		}
 
 		log.Info("Sending the following to " + service)
-		log.Info("%s\n", string(data))
+		log.Info(string(data))
 		// TODO: actually send the data
 	}
 }

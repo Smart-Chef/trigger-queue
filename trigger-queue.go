@@ -82,7 +82,7 @@ func createJob(subscriber string, triggerKeys []string, triggerParams []interfac
 	}
 
 	out, _ := json.Marshal(j)
-	logrus.Info("Created Job", out)
+	logrus.Info("Created Job", string(out))
 	return j, nil
 }
 

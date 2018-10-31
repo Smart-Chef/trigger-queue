@@ -1,10 +1,7 @@
 package main
 
 import (
-	"strconv"
 	"trigger-queue/sensors"
-
-	"github.com/sirupsen/logrus"
 )
 
 type Trigger func(interface{}) bool
@@ -16,8 +13,6 @@ func compareSensorReading(t string, getVal func() float64) Trigger {
 	switch t {
 	case ">":
 		return func(val interface{}) bool {
-			logrus.Info(strconv.FormatFloat(val.(float64), 'f', 6, 64) + ">" + strconv.FormatFloat(getVal(), 'f', 6, 64))
-			logrus.Info(val.(float64) > getVal())
 			return val.(float64) > getVal()
 		}
 	case ">=":

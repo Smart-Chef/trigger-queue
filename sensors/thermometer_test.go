@@ -7,13 +7,13 @@ import (
 )
 
 func TestThermometer_GetInstance(t *testing.T) {
-	a := new(Scale).GetInstance()
-	b := new(Scale).GetInstance()
+	a := new(Thermometer).GetInstance()
+	b := new(Thermometer).GetInstance()
 
 	assert.Equal(t, &a, &b)
 }
 
 func TestThermometer_GetTemp(t *testing.T) {
-	s := new(Scale).GetInstance()
-	assert.Equal(t, s.GetWeight(), 200)
+	s := new(Thermometer).GetInstance()
+	assert.Equal(t, float64(200), s.GetTemp())
 }

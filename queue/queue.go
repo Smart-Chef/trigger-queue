@@ -90,16 +90,12 @@ func (q *Queue) notify() {
 	}
 }
 
-// Adds one element at the back of the queue
-func (q *Queue) Append(elem interface{}) int64 {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-
+// append util without locking
+func (q *Queue) append(elem interface{}, id int64) {
 	if q.count == len(q.buf) {
 		q.resize()
 	}
 
-	id := q.newId()
 	q.items[id] = elem
 	q.ids[elem] = id
 	q.buf[q.tail] = id
@@ -112,6 +108,15 @@ func (q *Queue) Append(elem interface{}) int64 {
 	if q.count == 1 {
 		q.notEmpty.Broadcast()
 	}
+}
+
+// Adds one element at the back of the queue
+func (q *Queue) Append(elem interface{}) int64 {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	id := q.newId()
+	q.append(elem, id)
 	return id
 }
 
@@ -161,23 +166,36 @@ func (q *Queue) Front() interface{} {
 	return nil
 }
 
-// Evaluate Front Element element at the front of queue
-func (q *Queue) EvaluateFront(tf func(interface{}) bool, af func(interface{})) {
+// Evaluate Front Element element at the front of queue for trigger queue
+func (q *Queue) EvaluateFront(triggerFunc func(interface{}) bool, actionFunc func(interface{})) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	id := q.buf[q.head]
-	if id != 0 {
-		if tf(q.items[id]) {
-			af(q.items[id])
+	// Return if the queue is empty
+	if q.count <= 0 {
+		return
+	}
 
-			elem, _ := q.items[id]
-			//if !ok {
-			//	return false
-			//}
-			delete(q.ids, elem)
-			delete(q.items, id)
+	// Get the id of our head and pop it from the buffer
+	id := q.pop()
+
+	// Ensure that our buffer is not empty -- maybe?
+	if id != 0 {
+		// Get the head element
+		elem := q.items[id]
+
+		// Remove the element from the head of the ids and items list
+		delete(q.ids, elem)
+		delete(q.items, id)
+
+		// Check if all the triggers evaluate to true
+		if triggerFunc(elem) {
+			actionFunc(elem)
+			return
 		}
+
+		// Append the item to the end of the queue
+		q.append(elem, id)
 	}
 }
 

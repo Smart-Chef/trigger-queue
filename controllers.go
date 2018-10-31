@@ -15,7 +15,7 @@ var INVALIDSTATUS = "INVALID"
 
 // handleBadRequest for the application
 func handleBadRequest(w http.ResponseWriter, msgAndArgs ...interface{}) {
-	log.Warn(msgAndArgs)
+	//log.Warn(msgAndArgs)
 	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(&struct {
 		Status string      `json:"status"`

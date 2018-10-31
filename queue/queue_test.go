@@ -4,6 +4,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestQueueSimple(t *testing.T) {
@@ -90,6 +92,50 @@ func TestQueueWrappingPrepend(t *testing.T) {
 	for i := 0; i < minQueueLen; i++ {
 		q.Pop()
 	}
+}
+
+func TestQueueEvaluateFrontFalse(t *testing.T) {
+	q := New()
+
+	for i := 0; i < minQueueLen; i++ {
+		q.Append(i)
+	}
+
+	assert.Equal(t, minQueueLen, q.count)
+	q.EvaluateFront(func(i interface{}) bool {
+		return false
+	}, func(i interface{}) {
+		return
+	})
+
+	assert.Equal(t, minQueueLen, q.count)
+	for i := 1; i < minQueueLen; i++ {
+		assert.Equal(t, i, q.Pop().(int))
+	}
+
+	assert.Equal(t, 0, q.Front())
+}
+
+func TestQueueEvaluateFrontTrue(t *testing.T) {
+	q := New()
+
+	for i := 0; i < minQueueLen; i++ {
+		q.Append(i)
+	}
+
+	assert.Equal(t, minQueueLen, q.count)
+	q.EvaluateFront(func(i interface{}) bool {
+		return true
+	}, func(i interface{}) {
+		return
+	})
+
+	assert.Equal(t, minQueueLen-1, q.count)
+	for i := 1; i < minQueueLen; i++ {
+		assert.Equal(t, i, q.Pop().(int))
+	}
+
+	assert.Equal(t, nil, q.Front())
 }
 
 func TestQueueThreadSafety(t *testing.T) {

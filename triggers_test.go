@@ -20,7 +20,7 @@ func TestTemp(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, Triggers[test.name](test.param), test.expected)
+			assert.Equal(t, Triggers[test.name](float64(test.param)), test.expected)
 		})
 	}
 }
@@ -39,7 +39,7 @@ func TestWeight(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, Triggers[test.name](test.param), test.expected)
+			assert.Equal(t, Triggers[test.name](float64(test.param)), test.expected)
 		})
 	}
 }
