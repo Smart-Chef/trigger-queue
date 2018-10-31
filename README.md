@@ -1,4 +1,5 @@
 # Trigger-Queue
+[![Build Status](https://travis-ci.org/Smart-Chef/trigger-queue.svg?branch=master)](https://travis-ci.org/Smart-Chef/trigger-queue)
 
 ## Setup
 
