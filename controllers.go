@@ -75,7 +75,12 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	service := params["service"]
 
-	id, _ = strconv.ParseInt(params["id"], 10, 0)
+	id, err := strconv.ParseInt(params["id"], 10, 0)
+
+	if err != nil {
+		handleBadRequest(w, err)
+	}
+
 	q := TriggerQueue[service]
 	success := q.RemoveID(id)
 
