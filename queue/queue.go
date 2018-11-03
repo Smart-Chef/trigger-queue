@@ -273,12 +273,10 @@ func (q *Queue) Remove(elem interface{}) bool {
 func (q *Queue) RemoveID(id int64) bool {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
-
 	elem, ok := q.items[id]
+
 	if !ok {
 		return false
 	}
-	delete(q.ids, elem)
-	delete(q.items, id)
-	return true
+	return q.Remove(elem)
 }
