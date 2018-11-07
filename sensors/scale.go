@@ -26,7 +26,7 @@ func (Scale) setupScale() *Scale {
 // GetWeight gets the current weight value from teh scale sensor
 func (*Scale) GetWeight() float64 {
 	// TODO: get weight from sensor
-	return 200
+	return 321
 }
 
 // Implement Singleton GetInstance

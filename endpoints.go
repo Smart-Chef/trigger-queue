@@ -60,14 +60,26 @@ var AllRoutes = [...]Endpoint{
 			http.MethodPost: addJob,
 		},
 	}, {
+		path: "/getTemp",
+		methods: map[string]http.Handler{
+			http.MethodGet: GetTemp,
+		},
+	}, {
+		path: "/getWeight",
+		methods: map[string]http.Handler{
+			http.MethodGet: GetWeight,
+		},
+	}, {
 		path: "/delete/{service}/{id}",
 		methods: map[string]http.Handler{
-			http.MethodPost: deleteJob,
+			http.MethodPost:   deleteJob,
+			http.MethodDelete: deleteJob,
 		},
 	}, {
 		path: "/clear/{service}",
 		methods: map[string]http.Handler{
-			http.MethodPost: clearQueue,
+			http.MethodPost:   clearQueue,
+			http.MethodDelete: clearQueue,
 		},
 	}, {
 		path: "/show",

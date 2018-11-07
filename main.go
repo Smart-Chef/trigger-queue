@@ -41,7 +41,7 @@ func main() {
 	// Start server
 	srv := &http.Server{
 		Handler: r,
-		Addr:    "127.0.0.1:8000",
+		Addr:    ":8000",
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
@@ -58,9 +58,11 @@ func main() {
 	// Run the trigger queue consumer thread
 	go func() {
 		for {
+			//start := time.Now()
 			for _, q := range TriggerQueue {
 				q.EvaluateFront(executeTrigger, executeAction)
 			}
+			//log.Info("Queue consumer took " + time.Since(start).String())
 			time.Sleep(2 * time.Second)
 		}
 	}()

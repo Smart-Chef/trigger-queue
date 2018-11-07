@@ -278,5 +278,8 @@ func (q *Queue) RemoveID(id int64) bool {
 	if !ok {
 		return false
 	}
-	return q.Remove(elem)
+
+	delete(q.ids, elem)
+	delete(q.items, id)
+	return true
 }

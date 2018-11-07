@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"trigger-queue/queue"
+	"trigger-queue/sensors"
 
 	log "github.com/sirupsen/logrus"
 
@@ -61,6 +62,34 @@ var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&Response{
 		Status: req.Service,
 		JobID:  id,
+	})
+})
+
+var GetTemp = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	type Response struct {
+		Status string  `json:"status"`
+		Data   float64 `json:"data"`
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	temp := new(sensors.Thermometer).GetInstance().GetTemp()
+	json.NewEncoder(w).Encode(&Response{
+		Status: "success",
+		Data:   temp,
+	})
+})
+
+var GetWeight = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	type Response struct {
+		Status string  `json:"status"`
+		Data   float64 `json:"data"`
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	weight := new(sensors.Scale).GetInstance().GetWeight()
+	json.NewEncoder(w).Encode(&Response{
+		Status: "success",
+		Data:   weight,
 	})
 })
 
