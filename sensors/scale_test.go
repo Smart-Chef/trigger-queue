@@ -12,8 +12,3 @@ func TestScale_GetInstance(t *testing.T) {
 
 	assert.Equal(t, &a, &b)
 }
-
-func TestScale_GetWeight(t *testing.T) {
-	s := new(Scale).GetInstance()
-	assert.Equal(t, float64(200), s.GetWeight())
-}
