@@ -12,11 +12,11 @@ func TestTemp(t *testing.T) {
 		param    int
 		expected bool
 	}{
-		{"temp_>", 200, false},
+		{"temp_>", 200, true},
 		{"temp_>=", 200, true},
 		{"temp_<", 200, false},
-		{"temp_<=", 200, true},
-		{"temp_==", 200, true},
+		{"temp_<=", 200, false},
+		{"temp_==", 200, false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -31,11 +31,11 @@ func TestWeight(t *testing.T) {
 		param    int
 		expected bool
 	}{
-		{"weight_>", 200, false},
+		{"weight_>", 200, true},
 		{"weight_>=", 200, true},
 		{"weight_<", 200, false},
-		{"weight_<=", 200, true},
-		{"weight_==", 200, true},
+		{"weight_<=", 200, false},
+		{"weight_==", 200, false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

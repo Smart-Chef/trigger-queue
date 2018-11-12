@@ -20,7 +20,7 @@ func (Thermometer) setupThermometer() *Thermometer {
 // GetTemp gets the current temperature value from the thermometer
 func (*Thermometer) GetTemp() float64 {
 	// TODO: get temp from sensor
-	return 200
+	return 250
 }
 
 // Implement Singleton GetInstance

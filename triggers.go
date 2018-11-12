@@ -13,23 +13,23 @@ func compareSensorReading(t string, getVal func() float64) Trigger {
 	switch t {
 	case ">":
 		return func(val interface{}) bool {
-			return val.(float64) > getVal()
+			return getVal() > val.(float64)
 		}
 	case ">=":
 		return func(val interface{}) bool {
-			return val.(float64) >= getVal()
+			return getVal() >= val.(float64)
 		}
 	case "<":
 		return func(val interface{}) bool {
-			return val.(float64) < getVal()
+			return getVal() < val.(float64)
 		}
 	case "<=":
 		return func(val interface{}) bool {
-			return val.(float64) <= getVal()
+			return getVal() <= val.(float64)
 		}
 	case "==":
 		return func(val interface{}) bool {
-			return val.(float64) == getVal()
+			return getVal() == val.(float64)
 		}
 	default:
 		return func(val interface{}) bool {
