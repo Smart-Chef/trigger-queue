@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -21,6 +24,24 @@ func sendDataHelper(service string) Action {
 	}
 }
 
+func changeStep(payload interface{}) {
+	url := "http://localhost:8001/api/increment-step"
+
+	log.Info("Executing \"changeStep\"")
+	jstStr, _ := json.Marshal(payload)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jstStr))
+
+	req.Header.Add("Content-Type", "application/json")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	log.Info("Action response: " + string(body))
+}
+
 var Actions = map[string]Action{
-	"sendToNLP": sendDataHelper("NLP"),
+	"sendToNLP":  sendDataHelper("NLP"),
+	"changeStep": changeStep,
 }
