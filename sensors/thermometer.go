@@ -2,21 +2,25 @@ package sensors
 
 import (
 	"fmt"
-	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
-	// log "github.com/sirupsen/logrus"
+
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
 
 var thermometerInstance *Thermometer
 var thermometerOnce sync.Once
 
 func init() {
-	// todo start python driver
-	fmt.Println("")
-
+	// Load env variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 }
 
 // Scale should be treated as a singleton
@@ -29,19 +33,19 @@ type Thermometer struct {
 
 // setupThermometer connects to the physical thermometer
 func (Thermometer) setupThermometer() *Thermometer {
-	// TODO: add code to connect to the actual sensor
-	remoteAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10000")
+	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("THERMOMETER_ADDR"))
 	ln, err := net.ListenUDP("udp", remoteAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	ln.SetReadBuffer(16)
 	ln.SetWriteBuffer(16)
-	fmt.Printf("Established connection to %s \n", remoteAddr)
-	// log.Printf("Remote UDP address : %s \n", conn.RemoteAddr().String())
+	log.Printf("Established connection to %s \n", remoteAddr)
 	log.Printf("Local UDP client address : %s \n", ln.LocalAddr().String())
 	defer ln.Close()
-	//todo set up socket
+
+	// TODO: set up socket
 	return &Thermometer{
 		name: "testThermometer",
 		addr: remoteAddr,
@@ -55,16 +59,10 @@ func (t *Thermometer) GetTemp() float64 {
 	var buffer []byte
 	var length = 0
 
-	// for {
 	tempLength, _ := ln.Read(temp)
-	// if err != nil {
-	// 	break
-	// }
 	buffer = temp
 	length = tempLength
-	// }
 
-	// fmt.Println("UDP Server : ", addr)
 	values := strings.Split(string(buffer[:length]), ",")
 	fmt.Println("Received from UDP server : ", values[0]+","+values[1])
 	probe1, err := strconv.Atoi(values[0])

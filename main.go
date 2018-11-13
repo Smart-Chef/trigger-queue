@@ -2,22 +2,63 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+	"trigger-queue/sensors"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
-func main() {
+var (
+	// Flags
+	walkFlg    bool // Walk and print the routes - default: false
+	verboseFlg bool // Verbose logging - default: false
+
+	// Sensors
+	Scale       *sensors.Scale
+	Thermometer *sensors.Thermometer
+)
+
+func init() {
+	// Handle cli flags
+	flag.BoolVar(&walkFlg, "walk", false, "Walk the routes")
+	flag.BoolVar(&verboseFlg, "verbose", false, "Display verbose logs")
+	flag.Parse()
+
+	// Load env variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Setup logger
 	Formatter := new(log.TextFormatter)
 	Formatter.TimestampFormat = "02-01-2006 15:04:05"
 	Formatter.FullTimestamp = true
 	log.SetFormatter(Formatter)
 
+	// Print env values
+	if verboseFlg {
+		var env map[string]string
+		env, _ = godotenv.Read()
+
+		log.Info("Environment Variables")
+		for k, v := range env {
+			log.Printf("%s=%s\n", k, v)
+		}
+	}
+
+	// Setup sensors
+	Scale = new(sensors.Scale).GetInstance()
+	Thermometer = new(sensors.Thermometer).GetInstance()
+}
+
+func main() {
 	// Setup Mux
 	r := mux.NewRouter()
 	var wait time.Duration
@@ -36,12 +77,14 @@ func main() {
 	CreateRoutes(r, AllRoutes[:], "/api")
 
 	// Walk all the routes
-	r.Walk(RouteWalker)
+	if walkFlg {
+		r.Walk(RouteWalker)
+	}
 
 	// Start server
 	srv := &http.Server{
 		Handler: r,
-		Addr:    ":8000",
+		Addr:    os.Getenv("TRIGGER_QUEUE_ADDR"),
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
@@ -50,6 +93,7 @@ func main() {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
+		log.Printf("Starting trigger-queue server at %s", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
@@ -57,12 +101,13 @@ func main() {
 
 	// Run the trigger queue consumer thread
 	go func() {
+		if verboseFlg {
+			log.Info("Started trigger queue consumer thread")
+		}
 		for {
-			//start := time.Now()
 			for _, q := range TriggerQueue {
 				q.EvaluateFront(executeTrigger, executeAction)
 			}
-			//log.Info("Queue consumer took " + time.Since(start).String())
 			time.Sleep(2 * time.Second)
 		}
 	}()

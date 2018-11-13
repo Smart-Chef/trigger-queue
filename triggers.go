@@ -6,9 +6,6 @@ import (
 
 type Trigger func(interface{}) bool
 
-var Scale = new(sensors.Scale).GetInstance()
-var Thermometer = new(sensors.Thermometer).GetInstance()
-
 func compareSensorReading(t string, getVal func() float64) Trigger {
 	switch t {
 	case ">":

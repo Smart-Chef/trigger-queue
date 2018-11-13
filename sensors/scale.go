@@ -13,10 +13,6 @@ type Scale struct {
 	// TODO: add other metadata
 }
 
-func Init() {
-
-}
-
 // setupScale connects to the physical sensor
 func (Scale) setupScale() *Scale {
 	// TODO: add code to connect to the actual sensor
