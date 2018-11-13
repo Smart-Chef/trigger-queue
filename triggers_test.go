@@ -12,15 +12,17 @@ func TestTemp(t *testing.T) {
 		param    int
 		expected bool
 	}{
-		{"temp_>", 200, true},
-		{"temp_>=", 200, true},
-		{"temp_<", 200, false},
-		{"temp_<=", 200, false},
-		{"temp_==", 200, false},
+		{">", 200, true},
+		{">=", 200, true},
+		{"<", 200, false},
+		{"<=", 200, false},
+		{"==", 200, false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, Triggers[test.name](float64(test.param)), test.expected)
+			assert.Equal(t, compareSensorReading(test.name, func() float64 {
+				return 250
+			})(float64(test.param)), test.expected)
 		})
 	}
 }

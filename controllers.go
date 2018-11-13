@@ -7,21 +7,19 @@ import (
 	"trigger-queue/queue"
 	"trigger-queue/sensors"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
-var INVALIDSTATUS = "INVALID"
+var InvalidStatus = "INVALID"
 
 // handleBadRequest for the application
 func handleBadRequest(w http.ResponseWriter, msgAndArgs ...interface{}) {
-	//log.Warn(msgAndArgs)
 	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(&struct {
 		Status string      `json:"status"`
 		Msg    interface{} `json:"msg"`
-	}{INVALIDSTATUS, msgAndArgs})
+	}{InvalidStatus, msgAndArgs})
 }
 
 // addJob to the requested service

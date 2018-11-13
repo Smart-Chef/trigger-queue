@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -25,14 +26,12 @@ func sendDataHelper(service string) Action {
 }
 
 func changeStep(payload interface{}) {
-	url := "http://localhost:8001/api/increment-step"
+	url := os.Getenv("RECIPE_WALKTHROUGH_API") + "/increment-step"
 
 	log.Info("Executing \"changeStep\"")
 	jstStr, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jstStr))
-
 	req.Header.Add("Content-Type", "application/json")
-
 	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
