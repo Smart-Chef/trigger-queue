@@ -27,10 +27,7 @@ func sendDataHelper(service string) Action {
 
 func changeStep(payload interface{}) {
 	url := os.Getenv("RECIPE_WALKTHROUGH_API") + "/increment-step"
-
-	log.Info("Executing \"changeStep\"")
-	jstStr, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jstStr))
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload.(string))))
 	req.Header.Add("Content-Type", "application/json")
 	res, _ := http.DefaultClient.Do(req)
 
