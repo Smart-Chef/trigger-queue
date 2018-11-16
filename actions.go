@@ -29,7 +29,12 @@ func changeStep(payload interface{}) {
 	url := os.Getenv("RECIPE_WALKTHROUGH_API") + "/increment-step"
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer([]byte(payload.(string))))
 	req.Header.Add("Content-Type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -37,7 +42,12 @@ func changeStep(payload interface{}) {
 	log.Info("Action response: " + string(body))
 }
 
+func mockAction(i interface{}) {
+	log.Info(i.(string))
+}
+
 var Actions = map[string]Action{
 	"sendToNLP":  sendDataHelper("NLP"),
 	"changeStep": changeStep,
+	"mockAction": mockAction,
 }

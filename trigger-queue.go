@@ -108,6 +108,6 @@ func executeTrigger(j interface{}) bool {
 func executeAction(j interface{}) {
 	job := j.(*Job)
 	logrus.Printf("Executing Action (%s)", job.ActionKey)
-	logrus.Info("Action Payload: " + job.ActionParams.(string))
+	//logrus.Info("Action Payload: " + job.ActionParams.(string))
 	job.Action(job.ActionParams)
 }
