@@ -6,12 +6,13 @@ import (
 	"time"
 	"trigger-queue/queue"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var TriggerQueue = map[string]*queue.Queue{
 	"nlp":          queue.New(),
 	"walk-through": queue.New(),
+	"other":        queue.New(),
 }
 
 type Job struct {
@@ -24,6 +25,7 @@ type Job struct {
 	ActionParams  interface{}
 	Subscriber    string
 	CreatedAt     time.Time
+	Errors        []error
 }
 
 func (j *Job) MarshalJSON() ([]byte, error) {
@@ -35,6 +37,7 @@ func (j *Job) MarshalJSON() ([]byte, error) {
 		ActionParams  interface{}   `json:"action_params"`
 		Subscriber    string        `json:"subscriber"`
 		CreatedAt     time.Time     `json:"created_at"`
+		Errors        []string      `json:"errors"`
 	}{
 		ID:            j.ID,
 		TriggerKeys:   j.TriggerKeys,
@@ -43,7 +46,16 @@ func (j *Job) MarshalJSON() ([]byte, error) {
 		ActionParams:  j.ActionParams,
 		Subscriber:    j.Subscriber,
 		CreatedAt:     j.CreatedAt,
+		Errors:        serializeListErrs(j.Errors),
 	})
+}
+
+func serializeListErrs(errs []error) []string {
+	s := make([]string, 0)
+	for _, e := range errs {
+		s = append(s, e.Error())
+	}
+	return s
 }
 
 func createJob(subscriber string, triggerKeys []string, triggerParams []interface{}, actionKey string, actionParams interface{}) (*Job, error) {
@@ -62,11 +74,9 @@ func createJob(subscriber string, triggerKeys []string, triggerParams []interfac
 	// Get triggers -- should no triggerKeys be acceptable?
 	for i, key := range triggerKeys {
 		trigger, ok = Triggers[key]
-
 		if !ok {
 			return nil, errors.New("No trigger found named \"" + key + "\"")
 		}
-
 		triggers[i] = trigger
 	}
 
@@ -82,32 +92,46 @@ func createJob(subscriber string, triggerKeys []string, triggerParams []interfac
 	}
 
 	out, _ := json.Marshal(j)
-	logrus.Info("Created Job", string(out))
+	log.Info("Created Job", string(out))
 	return j, nil
 }
 
-func executeTrigger(j interface{}) bool {
+func evaluateTriggers(j interface{}) (bool, []error) {
 	if j == nil {
-		return false
+		return false, nil
 	}
 	var trigger Trigger
 	var triggerParam interface{}
+	errs := make([]error, 0)
 	job := j.(*Job)
 	i := 0
 	passed := true
 
+	// ignore if the job has any existing errors
+	if len(job.Errors) > 0 {
+		return false, job.Errors
+	}
+
+	// Evaluate all the triggers
 	for passed && i < len(job.Triggers) {
 		trigger = job.Triggers[i]
 		triggerParam = job.TriggerParams[i]
-		passed = trigger(triggerParam)
+		p, err := trigger(triggerParam)
+		if err != nil {
+			errs = append(errs, err)
+		}
+		passed = p
 		i++
 	}
-	return passed
+	return passed, errs
 }
 
 func executeAction(j interface{}) {
 	job := j.(*Job)
-	logrus.Printf("Executing Action (%s)", job.ActionKey)
-	//logrus.Info("Action Payload: " + job.ActionParams.(string))
+	log.Printf("Executing Action (%s)", job.ActionKey)
 	job.Action(job.ActionParams)
+}
+
+func triggerError(j interface{}, errs []error) {
+	j.(*Job).Errors = errs
 }

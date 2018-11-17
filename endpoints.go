@@ -55,7 +55,7 @@ var AllRoutes = [...]Endpoint{
 			http.MethodPost: Pong,
 		},
 	}, {
-		path: "/add/{service}",
+		path: "/add",
 		methods: map[string]http.Handler{
 			http.MethodPost: addJob,
 		},
