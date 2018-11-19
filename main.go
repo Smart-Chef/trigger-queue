@@ -22,12 +22,15 @@ var (
 	// Sensors
 	Scale       *sensors.Scale
 	Thermometer *sensors.Thermometer
+
+	float64EqualityThreshold = 1e-9
 )
 
 func init() {
 	// Handle cli flags
 	flag.BoolVar(&walkFlg, "walk", false, "Walk the routes")
 	flag.BoolVar(&verboseFlg, "verbose", false, "Display verbose logs")
+
 	flag.Parse()
 
 	// Load env variables
@@ -45,17 +48,30 @@ func init() {
 	// Print env values
 	if verboseFlg {
 		var env map[string]string
-		env, _ = godotenv.Read()
+		env, err = godotenv.Read()
 
-		log.Info("Environment Variables")
-		for k, v := range env {
-			log.Printf("%s=%s\n", k, v)
+		if err != nil {
+			log.Warn("Error printing .env files")
+		} else {
+			log.Info("Environment Variables")
+			for k, v := range env {
+				log.Printf("%s=%s\n", k, v)
+			}
 		}
 	}
 
 	// Setup sensors
-	Scale = new(sensors.Scale).GetInstance()
-	Thermometer = new(sensors.Thermometer).GetInstance()
+	Scale, err = new(sensors.Scale).GetInstance()
+	if err != nil {
+		log.Error("Error setting up Scale")
+		log.Fatal(err.Error())
+	}
+
+	Thermometer, err = new(sensors.Thermometer).GetInstance()
+	if err != nil {
+		log.Error("Error setting up Thermometer")
+		log.Fatal(err.Error())
+	}
 }
 
 func main() {
@@ -106,7 +122,7 @@ func main() {
 		}
 		for {
 			for _, q := range TriggerQueue {
-				q.EvaluateFront(executeTrigger, executeAction)
+				q.EvaluateFront(evaluateTriggers, executeAction, triggerError)
 			}
 			time.Sleep(2 * time.Second)
 		}
@@ -129,6 +145,5 @@ func main() {
 	// Optionally, you could run srv.Shutdown in a goroutine and block on
 	// <-ctx.Done() if your application should wait for other services
 	// to finalize based on context cancellation.
-	//Info.Println("shutting down")
 	os.Exit(0)
 }

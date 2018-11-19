@@ -167,7 +167,7 @@ func (q *Queue) Front() interface{} {
 }
 
 // Evaluate Front Element element at the front of queue for trigger queue
-func (q *Queue) EvaluateFront(triggerFunc func(interface{}) bool, actionFunc func(interface{})) {
+func (q *Queue) EvaluateFront(triggerFunc func(interface{}) (bool, []error), actionFunc func(interface{}), onTrigErr func(interface{}, []error)) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
@@ -189,7 +189,11 @@ func (q *Queue) EvaluateFront(triggerFunc func(interface{}) bool, actionFunc fun
 		delete(q.items, id)
 
 		// Check if all the triggers evaluate to true
-		if triggerFunc(elem) {
+		success, err := triggerFunc(elem)
+		if err != nil {
+			onTrigErr(elem, err)
+		}
+		if success {
 			actionFunc(elem)
 			return
 		}

@@ -24,6 +24,7 @@ func handleBadRequest(w http.ResponseWriter, msgAndArgs ...interface{}) {
 
 // addJob to the requested service
 var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	type Request struct {
 		Service       string        `json:"service"`
 		TriggerKeys   []string      `json:"trigger_keys"`
@@ -37,21 +38,25 @@ var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		Msg    string `json:"msg"`
 	}
 
-	params := mux.Vars(r)
-
 	req := &Request{}
 	json.NewDecoder(r.Body).Decode(&req)
-	w.Header().Set("Content-Type", "application/json")
+
+	if req.Service == "" {
+		req.Service = "other"
+	}
 
 	q, ok := TriggerQueue[req.Service]
 	if !ok {
+		log.Error("Unrecognized Service \"" + req.Service + "\"")
 		handleBadRequest(w, "Unrecognized Service \""+req.Service+"\"")
 		return
 	}
 
-	j, err := createJob(params["service"], req.TriggerKeys, req.TriggerParams, req.ActionKey, req.ActionParams)
+	j, err := createJob(req.Service, req.TriggerKeys, req.TriggerParams, req.ActionKey, req.ActionParams)
 	if err != nil {
-		handleBadRequest(w, err.Error())
+		log.Error("Error creating job")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error creating job")
 		return
 	}
 
@@ -59,35 +64,61 @@ var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	j.ID = id
 	json.NewEncoder(w).Encode(&Response{
 		Status: req.Service,
-		JobID:  id,
+		JobID:  j.ID,
 	})
 })
 
+// Get the current thermometer value
 var GetTemp = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	type Response struct {
 		Status string  `json:"status"`
 		Data   float64 `json:"data"`
 	}
-	w.Header().Set("Content-Type", "application/json")
 
-	temp := new(sensors.Thermometer).GetInstance().GetTemp()
+	temp, err := new(sensors.Thermometer).GetInstance()
+	if err != nil {
+		log.Error("Error getting thermometer instance")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error getting thermometer instance")
+	}
+
+	val, err := temp.GetTemp()
+	if err != nil {
+		log.Error("Error getting thermometer value")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error getting thermometer value")
+	}
 	json.NewEncoder(w).Encode(&Response{
 		Status: "success",
-		Data:   temp,
+		Data:   val,
 	})
 })
 
+// Get the current scale reading
 var GetWeight = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	type Response struct {
 		Status string  `json:"status"`
 		Data   float64 `json:"data"`
 	}
-	w.Header().Set("Content-Type", "application/json")
 
-	weight := new(sensors.Scale).GetInstance().GetWeight()
+	scale, err := new(sensors.Scale).GetInstance()
+	if err != nil {
+		log.Error("Error getting scale instance")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error getting scale instance")
+	}
+
+	val, err := scale.GetWeight()
+	if err != nil {
+		log.Error("Error getting scale value")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error getting scale value")
+	}
 	json.NewEncoder(w).Encode(&Response{
 		Status: "success",
-		Data:   weight,
+		Data:   val,
 	})
 })
 
@@ -100,21 +131,39 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	var status string
 	var id int64
 	params := mux.Vars(r)
-	service := params["service"]
-
-	id, err := strconv.ParseInt(params["id"], 10, 0)
-
-	if err != nil {
-		handleBadRequest(w, err)
+	service, ok := params["service"]
+	if !ok {
+		log.Error("No service specified")
+		handleBadRequest(w, "No service specified")
+		return
 	}
 
-	q := TriggerQueue[service]
-	success := q.RemoveID(id)
+	idParam, ok := params["id"]
+	if !ok {
+		log.Error("No ID specified")
+		handleBadRequest(w, "No ID specified")
+		return
+	}
 
-	if success {
-		status = "success"
-	} else {
-		status = "failure"
+	id, err := strconv.ParseInt(idParam, 10, 0)
+	if err != nil {
+		log.Error("Error converting (" + idParam + ") to int")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error converting ("+idParam+") to int")
+		return
+	}
+
+	q, ok := TriggerQueue[service]
+	if !ok {
+		log.Error("Invalid Service: " + service)
+		handleBadRequest(w, "Invalid Service: "+service)
+	}
+
+	ok = q.RemoveID(id)
+	if !ok {
+		log.Error("Could not remove job with ID " + idParam)
+		handleBadRequest(w, "Could not remove job with ID "+idParam)
+		return
 	}
 	json.NewEncoder(w).Encode(&Response{
 		Status: status,
@@ -123,17 +172,23 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 // clearQueue of a particular service
 var clearQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	type Response struct {
 		Status string `json:"status"`
 	}
-	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	service := params["service"]
+	service, ok := params["service"]
+	if !ok {
+		log.Error("No service specified")
+		handleBadRequest(w, "No service specified")
+		return
+	}
 
 	q, ok := TriggerQueue[service]
 
 	if !ok {
-		handleBadRequest(w, "No service \""+service+"\"")
+		log.Error("Invalid Service: " + service)
+		handleBadRequest(w, "Invalid Service: "+service)
 		return
 	}
 
@@ -146,24 +201,31 @@ var clearQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 // Show Queue(s)
 var showQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	service := mux.Vars(r)["service"]
-	q, ok := TriggerQueue[service]
-
+	service, ok := mux.Vars(r)["service"]
 	if !ok {
-		handleBadRequest(w, "Invalid service \""+service+"\"")
+		log.Error("No service specified")
+		handleBadRequest(w, "No service specified")
+		return
+	}
+
+	q, ok := TriggerQueue[service]
+	if !ok {
+		log.Error("Invalid Service: " + service)
+		handleBadRequest(w, "Invalid Service: "+service)
 		return
 	}
 	json.NewEncoder(w).Encode(q)
 })
 
+// Encode all queues
 var showAllQueues = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	type Response struct {
 		Status string                  `json:"status"`
 		Body   map[string]*queue.Queue `json:"body"`
 	}
-	w.Header().Set("Content-Type", "application/json")
-	body := make(map[string]*queue.Queue)
 
+	body := make(map[string]*queue.Queue)
 	for k, q := range TriggerQueue {
 		body[k] = q
 	}
@@ -177,5 +239,6 @@ var showAllQueues = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 // Server testing controllers
 var Pong = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	log.Info("Pong!")
+	log.Info("%+v", r.Header)
 	w.Write([]byte("Pong!\n"))
 })

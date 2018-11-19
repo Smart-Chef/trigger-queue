@@ -1,8 +1,10 @@
 package sensors
 
 import (
+	"errors"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,80 +25,68 @@ func init() {
 type Thermometer struct {
 	name string
 	addr *net.UDPAddr
-
-	// TODO: add other metadata
+	conn *net.UDPConn
 }
 
 // setupThermometer connects to the physical thermometer
-func (Thermometer) setupThermometer() *Thermometer {
-	// TODO: add code to connect to the actual sensor
-	remoteAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10000")
+func (Thermometer) setupThermometer() (*Thermometer, error) {
+	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("THERMOMETER_ADDR"))
 	ln, err := net.ListenUDP("udp", remoteAddr)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	ln.SetReadBuffer(16)
 	ln.SetWriteBuffer(16)
-	fmt.Printf("Established connection to %s \n", remoteAddr)
-	// log.Printf("Remote UDP address : %s \n", conn.RemoteAddr().String())
-	log.Printf("Local UDP client address : %s \n", ln.LocalAddr().String())
-	defer ln.Close()
-	//todo set up socket
+	log.Infof("Established connection to %s \n", remoteAddr)
+	log.Infof("Local UDP client address : %s \n", ln.LocalAddr().String())
+	// Keep this open all the time?
+	//defer ln.Close()
+
 	return &Thermometer{
 		name: "testThermometer",
 		addr: remoteAddr,
-	}
+	}, err
 }
 
 // GetTemp gets the current temperature value from the thermometer
-func (t *Thermometer) GetTemp() float64 {
-	remoteAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:10000")
-	ln, err := net.ListenUDP("udp", remoteAddr)
-
-	if err != nil {
-		log.Error(err.Error())
+func (t *Thermometer) GetTemp() (float64, error) {
+	// Ensure we have a connection
+	if t.conn == nil {
+		return 0, errors.New("connection not setup")
 	}
-	temp := make([]byte, 128)
+
 	var buffer []byte
 	var length = 0
+	temp := make([]byte, 128)
 
-	// for {
-	tempLength, err := ln.Read(temp)
-
-	if err != nil {
-		log.Error(err.Error())
-	}
-	// if err != nil {
-	// 	break
-	// }
+	tempLength, _ := t.conn.Read(temp)
 	buffer = temp
 	length = tempLength
 	// }
 
 	// fmt.Println("UDP Server : ", addr)
 	values := strings.Split(string(buffer[:length]), ",")
-	fmt.Println("Received from UDP server : ", values[0]+","+values[1])
 	probe1, err := strconv.Atoi(values[0])
 	if err != nil {
 		log.Error("Non-int value received")
+		return 0, err
 	}
 	value := float64(probe1) / 100.0
-	defer ln.Close()
 
 	if value == 330.36 {
-		log.Error("Received Null temperature, disregarding")
-		return 0
+		log.Warn("Received Null temperature, disregarding")
+		return 0, nil
 	}
 
-	// fmt.Println(value)
-
-	return value
+	return value, nil
 }
 
 // Implement Singleton GetInstance
-func (*Thermometer) GetInstance() *Thermometer {
+func (*Thermometer) GetInstance() (*Thermometer, error) {
+	var err error
+	err = nil
 	thermometerOnce.Do(func() {
-		thermometerInstance = new(Thermometer).setupThermometer()
+		thermometerInstance, err = new(Thermometer).setupThermometer()
 	})
-	return thermometerInstance
+	return thermometerInstance, err
 }

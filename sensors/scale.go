@@ -14,21 +14,23 @@ type Scale struct {
 }
 
 // setupScale connects to the physical sensor
-func (Scale) setupScale() *Scale {
+func (Scale) setupScale() (*Scale, error) {
 	// TODO: add code to connect to the actual sensor
-	return &Scale{"testScale"}
+	return &Scale{"testScale"}, nil
 }
 
 // GetWeight gets the current weight value from teh scale sensor
-func (*Scale) GetWeight() float64 {
+func (*Scale) GetWeight() (float64, error) {
 	// TODO: get weight from sensor
-	return 250
+	return 250, nil
 }
 
 // Implement Singleton GetInstance
-func (*Scale) GetInstance() *Scale {
+func (*Scale) GetInstance() (*Scale, error) {
+	var err error
+	err = nil
 	scaleOnce.Do(func() {
-		scaleInstance = new(Scale).setupScale()
+		scaleInstance, err = new(Scale).setupScale()
 	})
-	return scaleInstance
+	return scaleInstance, err
 }
