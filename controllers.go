@@ -122,6 +122,56 @@ var GetWeight = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	})
 })
 
+// executeJob from the requested service
+var executeJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	type Response struct {
+		Status string `json:"status"`
+	}
+	w.Header().Set("Content-Type", "application/json")
+	var id int64
+	params := mux.Vars(r)
+	service, ok := params["service"]
+	if !ok {
+		log.Error("No service specified")
+		handleBadRequest(w, "No service specified")
+		return
+	}
+
+	idParam, ok := params["id"]
+	if !ok {
+		log.Error("No ID specified")
+		handleBadRequest(w, "No ID specified")
+		return
+	}
+
+	id, err := strconv.ParseInt(idParam, 10, 0)
+	if err != nil {
+		log.Error("Error converting (" + idParam + ") to int")
+		log.Error(err.Error())
+		handleBadRequest(w, "Error converting ("+idParam+") to int")
+		return
+	}
+
+	q, ok := TriggerQueue[service]
+	if !ok {
+		log.Error("Invalid Service: " + service)
+		handleBadRequest(w, "Invalid Service: "+service)
+	}
+
+	elem, err := q.GetByID(id)
+	if err != nil {
+		log.Error("Could not find job with ID " + idParam)
+		handleBadRequest(w, "Could not find job with ID "+idParam)
+		return
+	}
+
+	// Execute the action
+	executeAction(elem)
+	json.NewEncoder(w).Encode(&Response{
+		Status: "success",
+	})
+})
+
 // deleteJob from the requested service
 var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	type Response struct {
