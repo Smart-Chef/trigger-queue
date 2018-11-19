@@ -1,7 +1,6 @@
 package sensors
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -40,21 +39,30 @@ func (Thermometer) setupThermometer() (*Thermometer, error) {
 	log.Infof("Established connection to %s \n", remoteAddr)
 	log.Infof("Local UDP client address : %s \n", ln.LocalAddr().String())
 	// Keep this open all the time?
-	//defer ln.Close()
+	defer ln.Close()
 
 	return &Thermometer{
 		name: "testThermometer",
 		addr: remoteAddr,
+		conn: ln,
 	}, err
 }
 
 // GetTemp gets the current temperature value from the thermometer
 func (t *Thermometer) GetTemp() (float64, error) {
 	// Ensure we have a connection
-	if t.conn == nil {
-		return 0, errors.New("connection not setup")
-	}
+	// if t.conn == nil {
+	// 	return 0, errors.New("connection not setup")
+	// }
 
+	ln, err := net.ListenUDP("udp", t.addr)
+	if err != nil {
+		log.Error(err.Error())
+		return 0, err
+	}
+	defer ln.Close()
+
+	t.conn = ln
 	var buffer []byte
 	var length = 0
 	temp := make([]byte, 128)
