@@ -122,10 +122,9 @@ func main() {
 		}
 		for {
 			for _, q := range TriggerQueue {
-				triggerTrue, elem := q.EvaluateFront(evaluateTriggers, triggerError)
-				if triggerTrue {
-					t := *elem
-					executeAction(t)
+				triggersTrue, elem := q.EvaluateFront(evaluateTriggers, triggerError)
+				if triggersTrue {
+					executeAction(*elem)
 				}
 			}
 			time.Sleep(2 * time.Second)
