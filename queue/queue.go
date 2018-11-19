@@ -2,6 +2,7 @@ package queue
 
 import (
 	"encoding/json"
+	"errors"
 	"math/rand"
 	"sync"
 )
@@ -167,13 +168,13 @@ func (q *Queue) Front() interface{} {
 }
 
 // Evaluate Front Element element at the front of queue for trigger queue
-func (q *Queue) EvaluateFront(triggerFunc func(interface{}) (bool, []error), actionFunc func(interface{}), onTrigErr func(interface{}, []error)) {
+func (q *Queue) EvaluateFront(triggerFunc func(interface{}) (bool, []error), onTrigErr func(interface{}, []error)) (bool, *interface{}) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
 	// Return if the queue is empty
 	if q.count <= 0 {
-		return
+		return false, nil
 	}
 
 	// Get the id of our head and pop it from the buffer
@@ -194,13 +195,13 @@ func (q *Queue) EvaluateFront(triggerFunc func(interface{}) (bool, []error), act
 			onTrigErr(elem, err)
 		}
 		if success {
-			actionFunc(elem)
-			return
+			return success, &elem
 		}
 
 		// Append the item to the end of the queue
 		q.append(elem, id)
 	}
+	return false, nil
 }
 
 // Previews element at the back of queue
@@ -286,4 +287,19 @@ func (q *Queue) RemoveID(id int64) bool {
 	delete(q.ids, elem)
 	delete(q.items, id)
 	return true
+}
+
+// Get a single element by ID also removing it from the queue
+func (q *Queue) GetByID(id int64) (interface{}, error) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	elem, ok := q.items[id]
+
+	if !ok {
+		return nil, errors.New("no element with specified id")
+	}
+
+	delete(q.ids, elem)
+	delete(q.items, id)
+	return elem, nil
 }

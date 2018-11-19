@@ -71,7 +71,12 @@ func weightComparisonHelper(t string, scale *sensors.Scale) Trigger {
 	return compareSensorReading(t, scale.GetWeight)
 }
 
+func pass(interface{}) (bool, error) {
+	return false, nil
+}
+
 var Triggers = map[string]Trigger{
+	"pass":      pass,
 	"timer":     timer,
 	"temp_>":    tempComparisonHelper(">", Thermometer),
 	"temp_>=":   tempComparisonHelper(">=", Thermometer),

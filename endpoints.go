@@ -76,6 +76,11 @@ var AllRoutes = [...]Endpoint{
 			http.MethodDelete: deleteJob,
 		},
 	}, {
+		path: "/execute/{service}/{id}",
+		methods: map[string]http.Handler{
+			http.MethodPost: executeJob,
+		},
+	}, {
 		path: "/clear/{service}",
 		methods: map[string]http.Handler{
 			http.MethodPost:   clearQueue,
