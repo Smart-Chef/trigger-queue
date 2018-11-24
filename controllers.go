@@ -16,10 +16,13 @@ var InvalidStatus = "INVALID"
 // handleBadRequest for the application
 func handleBadRequest(w http.ResponseWriter, msgAndArgs ...interface{}) {
 	w.WriteHeader(http.StatusBadRequest)
-	json.NewEncoder(w).Encode(&struct {
+	err := json.NewEncoder(w).Encode(&struct {
 		Status string      `json:"status"`
 		Msg    interface{} `json:"msg"`
 	}{InvalidStatus, msgAndArgs})
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 // addJob to the requested service
@@ -39,7 +42,10 @@ var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := &Request{}
-	json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 
 	if req.Service == "" {
 		req.Service = "other"
@@ -62,10 +68,13 @@ var addJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	id := q.Append(j)
 	j.ID = id
-	json.NewEncoder(w).Encode(&Response{
+	err = json.NewEncoder(w).Encode(&Response{
 		Status: req.Service,
 		JobID:  j.ID,
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // Get the current thermometer value
@@ -89,10 +98,13 @@ var GetTemp = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		handleBadRequest(w, "Error getting thermometer value")
 	}
-	json.NewEncoder(w).Encode(&Response{
+	err = json.NewEncoder(w).Encode(&Response{
 		Status: "success",
 		Data:   val,
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // Get the current scale reading
@@ -116,10 +128,13 @@ var GetWeight = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		handleBadRequest(w, "Error getting scale value")
 	}
-	json.NewEncoder(w).Encode(&Response{
+	err = json.NewEncoder(w).Encode(&Response{
 		Status: "success",
 		Data:   val,
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // executeJob from the requested service
@@ -167,9 +182,12 @@ var executeJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	// Execute the action
 	executeAction(elem)
-	json.NewEncoder(w).Encode(&Response{
+	err = json.NewEncoder(w).Encode(&Response{
 		Status: "success",
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // deleteJob from the requested service
@@ -215,9 +233,12 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleBadRequest(w, "Could not remove job with ID "+idParam)
 		return
 	}
-	json.NewEncoder(w).Encode(&Response{
+	err = json.NewEncoder(w).Encode(&Response{
 		Status: status,
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // clearQueue of a particular service
@@ -243,9 +264,12 @@ var clearQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q.Clean()
-	json.NewEncoder(w).Encode(&Response{
+	err := json.NewEncoder(w).Encode(&Response{
 		Status: "success",
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // Show Queue(s)
@@ -264,7 +288,10 @@ var showQueue = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handleBadRequest(w, "Invalid Service: "+service)
 		return
 	}
-	json.NewEncoder(w).Encode(q)
+	err := json.NewEncoder(w).Encode(q)
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // Encode all queues
@@ -280,15 +307,21 @@ var showAllQueues = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		body[k] = q
 	}
 
-	json.NewEncoder(w).Encode(&Response{
+	err := json.NewEncoder(w).Encode(&Response{
 		Status: "success",
 		Body:   body,
 	})
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })
 
 // Server testing controllers
 var Pong = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	log.Info("Pong!")
 	log.Info("%+v", r.Header)
-	w.Write([]byte("Pong!\n"))
+	_, err := w.Write([]byte("Pong!\n"))
+	if err != nil {
+		handleBadRequest(w, err)
+	}
 })

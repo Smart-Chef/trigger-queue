@@ -22,8 +22,6 @@ var (
 	// Sensors
 	Scale       *sensors.Scale
 	Thermometer *sensors.Thermometer
-
-	float64EqualityThreshold = 1e-9
 )
 
 func init() {
