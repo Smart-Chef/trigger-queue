@@ -229,7 +229,7 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 	ok = q.RemoveID(id)
 	if !ok {
-		log.Error("Could not remove job with ID " + idParam)
+		log.Warn("Could not remove job with ID " + idParam)
 		handleBadRequest(w, "Could not remove job with ID "+idParam)
 		return
 	}
