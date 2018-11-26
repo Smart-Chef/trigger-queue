@@ -76,8 +76,13 @@ func pass(interface{}) (bool, error) {
 	return false, nil
 }
 
+func passTrue(interface{}) (bool, error) {
+	return true, nil
+}
+
 var Triggers = map[string]Trigger{
 	"pass":      pass,
+	"passTrue":  passTrue,
 	"timer":     timer,
 	"temp_>":    tempComparisonHelper(">", Thermometer),
 	"temp_>=":   tempComparisonHelper(">=", Thermometer),
