@@ -50,11 +50,6 @@ func (Thermometer) setupThermometer() (*Thermometer, error) {
 
 // GetTemp gets the current temperature value from the thermometer
 func (t *Thermometer) GetTemp() (float64, error) {
-	// Ensure we have a connection
-	// if t.conn == nil {
-	// 	return 0, errors.New("connection not setup")
-	// }
-
 	ln, err := net.ListenUDP("udp", t.addr)
 	if err != nil {
 		log.Error(err.Error())
