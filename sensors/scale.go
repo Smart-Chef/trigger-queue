@@ -40,7 +40,9 @@ func (Scale) setupScale() (*Scale, error) {
 
 // GetWeight gets the current weight value from teh scale sensor
 func (s *Scale) GetWeight() (float64, error) {
+	log.Info("Getting Scale Reading")
 	ln, err := net.ListenUDP("udp", s.addr)
+	log.Info("Listening on UDP")
 	if err != nil {
 		log.Error(err.Error())
 		return 0, err
@@ -51,10 +53,18 @@ func (s *Scale) GetWeight() (float64, error) {
 	var length = 0
 	temp := make([]byte, 128)
 
-	tempLength, _ := ln.Read(temp)
+	log.Info("ABout to read ln")
+	tempLength, err := ln.Read(temp)
+	if err != nil {
+		return 0, err
+	}
+
+	log.Info("read ln")
 	buffer = temp
 	length = tempLength
 
+	log.Info("Converting")
+	log.Info(string(buffer[:length]))
 	value, err := strconv.Atoi(string(buffer[:length]))
 	if err != nil {
 		log.Error("Non-int value received")
