@@ -71,6 +71,7 @@ func weightComparisonHelper(t string, scale *sensors.Scale) Trigger {
 	return compareSensorReading(t, scale.GetWeight)
 }
 
+// Used for cases like, next step can only be triggered by outside source (NLP)
 func pass(interface{}) (bool, error) {
 	return false, nil
 }

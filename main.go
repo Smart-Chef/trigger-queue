@@ -73,6 +73,8 @@ func init() {
 }
 
 func main() {
+	// Defer cleaning up the scale
+	defer Scale.Cleanup()
 	// Setup Mux
 	r := mux.NewRouter()
 	var wait time.Duration

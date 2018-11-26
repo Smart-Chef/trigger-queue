@@ -9,6 +9,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sirupsen/logrus v1.1.1 h1:VzGj7lhU7KEB9e9gMpAV/v5XT2NVSvLJhJLCWbnkgXg=
 github.com/sirupsen/logrus v1.1.1/go.mod h1:zrgwTnHtNr00buQ1vSptGe8m1f/BbgsPukg8qsT7A+A=
+github.com/stianeikeland/go-rpio v3.0.0+incompatible h1:AWDcfdnPPZ7Jikis6HNj0EgujMfB4t7oi4nZd5cIqko=
+github.com/stianeikeland/go-rpio v3.0.0+incompatible/go.mod h1:Sh81rdJwD96E2wja2Gd7rrKM+XZ9LrwvN2w4IXrqLR8=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/subosito/gotenv v1.1.1 h1:TWxckSF6WVKWbo2M3tMqCtWa9NFUgqM1SSynxmYONOI=
