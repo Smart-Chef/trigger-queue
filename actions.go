@@ -60,10 +60,40 @@ func setStoveTemp(i interface{}) {
 	Stove.SetTemp(int(i.(float64)))
 }
 
+func changeStepStove(i interface{}) {
+	type Data struct {
+		IncrementSteps int     `json:"increment_steps"`
+		SendToNLP      bool    `json:"send_to_nlp"`
+		StoveStart     bool    `json:"stove_start"`
+		StoveTemp      float64 `json:"stove_temp"`
+	}
+
+	// Check what stove changes needs to be done
+	buffer := []byte(i.(string))
+	var data Data
+	e := json.Unmarshal(buffer, &data)
+	if e != nil {
+		log.Error(e.Error())
+	}
+
+	if e = Stove.SetTemp(int(data.StoveTemp)); e != nil {
+		log.Error(e.Error())
+	}
+
+	if data.StoveStart {
+		if e = Stove.StartStove(); e != nil {
+			log.Error(e.Error())
+		}
+	}
+	// Change the step like normal
+	changeStep(i)
+}
+
 // Actions for the trigger-queue to execute
 var Actions = map[string]Action{
-	"setStoveTemp": setStoveTemp,
-	"sendToNLP":    sendDataHelper("NLP"),
-	"changeStep":   changeStep,
-	"mockAction":   mockAction,
+	"setStoveTemp":    setStoveTemp,
+	"sendToNLP":       sendDataHelper("NLP"),
+	"changeStep":      changeStep,
+	"changeStepStove": changeStepStove,
+	"mockAction":      mockAction,
 }

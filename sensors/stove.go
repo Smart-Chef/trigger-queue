@@ -56,6 +56,13 @@ func (Stove) setupStove() (*Stove, error) {
 	}, nil
 }
 
+func (s *Stove) StartStove() error {
+	if !s.setup {
+		return errors.New("This stove instance has not been setup")
+	}
+	return toggleButton("start")
+}
+
 // SetTemp value
 func (s *Stove) SetTemp(temp int) error {
 	if !s.setup {
