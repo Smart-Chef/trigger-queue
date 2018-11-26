@@ -56,9 +56,14 @@ func mockAction(i interface{}) {
 	log.Info(i.(string))
 }
 
+func setStoveTemp(i interface{}) {
+	Stove.SetTemp(i.(int))
+}
+
 // Actions for the trigger-queue to execute
 var Actions = map[string]Action{
-	"sendToNLP":  sendDataHelper("NLP"),
-	"changeStep": changeStep,
-	"mockAction": mockAction,
+	"setStoveTemp": setStoveTemp,
+	"sendToNLP":    sendDataHelper("NLP"),
+	"changeStep":   changeStep,
+	"mockAction":   mockAction,
 }

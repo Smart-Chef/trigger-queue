@@ -22,6 +22,7 @@ var (
 	// Sensors
 	Scale       *sensors.Scale
 	Thermometer *sensors.Thermometer
+	Stove       *sensors.Stove
 )
 
 func init() {
@@ -70,11 +71,17 @@ func init() {
 		log.Error("Error setting up Thermometer")
 		log.Fatal(err.Error())
 	}
+
+	Stove, err = new(sensors.Stove).GetInstance()
+	if err != nil {
+		log.Error("Error setting up Stove")
+		log.Fatal(err.Error())
+	}
 }
 
 func main() {
-	// Defer cleaning up the scale
-	defer Scale.Cleanup()
+	// Defer cleaning up the Stove
+	defer Stove.Cleanup()
 	// Setup Mux
 	r := mux.NewRouter()
 	var wait time.Duration
