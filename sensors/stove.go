@@ -20,12 +20,12 @@ var (
 )
 
 var gpioPins = map[string]rpio.Pin{
-	"keep_warm":     rpio.Pin(18),
-	"medium":        rpio.Pin(18),
-	"high":          rpio.Pin(18),
-	"increase_temp": rpio.Pin(18),
-	"decrease_temp": rpio.Pin(18),
-	"start":         rpio.Pin(18),
+	"decrease_temp": rpio.Pin(23), // D
+	"increase_temp": rpio.Pin(16), // I
+	"keep_warm":     rpio.Pin(25), // K
+	"medium":        rpio.Pin(21), // M
+	"high":          rpio.Pin(18), // H
+	"start":         rpio.Pin(12), // S
 }
 
 // Stove should be treated as a singleton
@@ -44,12 +44,13 @@ func (Stove) setupStove() (*Stove, error) {
 
 	// Set all the pins to High
 	for _, pin := range gpioPins {
+		pin.Output()
 		pin.High()
 	}
 
 	fmt.Println("Done with setup")
 	return &Stove{
-		name:  "Stove",
+		name:  "stove",
 		pins:  gpioPins,
 		setup: true,
 	}, nil
@@ -58,7 +59,7 @@ func (Stove) setupStove() (*Stove, error) {
 // SetTemp value
 func (s *Stove) SetTemp(temp int) error {
 	if !s.setup {
-		return errors.New("This Stove instance has not been setup")
+		return errors.New("This stove instance has not been setup")
 	}
 
 	if temp <= KeepWarm {
@@ -101,6 +102,7 @@ func (s *Stove) SetTemp(temp int) error {
 	} else if temp > High {
 		toggleButton("high")
 		incTimes := math.Ceil(float64(temp-High) / 10)
+		// Break at maximum 500 degrees
 		for i := 0; i < int(incTimes) && i < 8; i++ {
 			toggleButton("increase_temp")
 		}
@@ -113,12 +115,6 @@ func (*Stove) Cleanup() error {
 	return rpio.Close()
 }
 
-// GetWeight gets the current weight value from teh Stove sensor
-func (*Stove) GetWeight() (float64, error) {
-	// TODO: get weight from sensor
-	return 250, nil
-}
-
 // Implement Singleton GetInstance
 func (*Stove) GetInstance() (*Stove, error) {
 	var err error
@@ -129,19 +125,28 @@ func (*Stove) GetInstance() (*Stove, error) {
 	return stoveInstance, err
 }
 
+func (s *Stove) toggleAll() error {
+	pins := []rpio.Pin{rpio.Pin(12), rpio.Pin(16), rpio.Pin(18), rpio.Pin(21), rpio.Pin(23), rpio.Pin(25)}
+	for _, pin := range pins {
+		fmt.Println(pin)
+		pin.Low()
+		time.Sleep(time.Second / 10)
+		pin.High()
+		time.Sleep(time.Second)
+	}
+	return nil
+}
+
 // toggleButton - press and depressed btn
 func toggleButton(key string) error {
-	fmt.Println("Looking for key")
 	btn, ok := gpioPins[key]
 	if !ok {
 		return errors.New("button not found: " + key)
 	}
-
-	fmt.Println("Button low")
+	fmt.Printf("Toggling: %s - %d\n", key, btn)
 	btn.Low()
 	time.Sleep(time.Second / 10)
 	btn.High()
-	fmt.Println("Button High")
 	time.Sleep(time.Second)
 	return nil
 }
