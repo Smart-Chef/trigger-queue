@@ -57,7 +57,7 @@ func mockAction(i interface{}) {
 }
 
 func setStoveTemp(i interface{}) {
-	Stove.SetTemp(i.(int))
+	Stove.SetTemp(int(i.(float64)))
 }
 
 // Actions for the trigger-queue to execute
