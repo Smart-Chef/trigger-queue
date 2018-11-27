@@ -21,7 +21,17 @@ func sendDataHelper(service string) Action {
 
 		log.Info("Sending the following to " + service)
 		log.Info(string(data))
-		// TODO: actually send the data
+		url := os.Getenv("NLP_API") + "/send_message/" + string(data)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			log.Error(err.Error())
+		}
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		defer res.Body.Close()
 	}
 }
 
