@@ -50,19 +50,23 @@ func (Thermometer) setupThermometer() (*Thermometer, error) {
 
 // GetTemp gets the current temperature value from the thermometer
 func (t *Thermometer) GetTemp() (float64, error) {
-	ln, err := net.ListenUDP("udp", t.addr)
+	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("THERMOMETER_ADDR"))
+	if err != nil {
+		log.Error(err.Error())
+		return 0, err
+	}
+	ln, err := net.ListenUDP("udp", remoteAddr)
 	if err != nil {
 		log.Error(err.Error())
 		return 0, err
 	}
 	defer ln.Close()
 
-	t.conn = ln
 	var buffer []byte
 	var length = 0
 	temp := make([]byte, 128)
 
-	tempLength, _ := t.conn.Read(temp)
+	tempLength, _ := ln.Read(temp)
 	buffer = temp
 	length = tempLength
 	// }

@@ -189,6 +189,10 @@ func (q *Queue) EvaluateFront(triggerFunc func(interface{}) (bool, []error), onT
 		delete(q.ids, elem)
 		delete(q.items, id)
 
+		if elem == nil {
+			return false, nil
+		}
+
 		// Check if all the triggers evaluate to true
 		success, err := triggerFunc(elem)
 		if err != nil {

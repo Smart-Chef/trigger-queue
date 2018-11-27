@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -73,10 +72,8 @@ func setStoveTemp(i interface{}) {
 
 func changeStepStove(i interface{}) {
 	type Data struct {
-		IncrementSteps string `json:"increment_steps"`
-		SendToNLP      bool   `json:"send_to_nlp"`
-		StoveStart     bool   `json:"stove_start"`
-		StoveTemp      string `json:"stove_temp"`
+		StoveStart bool    `json:"stove_start"`
+		StoveTemp  float64 `json:"stove_temp"`
 	}
 
 	// Check what stove changes needs to be done
@@ -87,12 +84,10 @@ func changeStepStove(i interface{}) {
 		log.Error(e.Error())
 	}
 
-	temp, e := strconv.ParseFloat(data.StoveTemp, 64)
-	if e != nil {
-		log.Error(e.Error())
-	}
-	if e = Stove.SetTemp(int(temp)); e != nil {
-		log.Error(e.Error())
+	if data.StoveTemp != 0 {
+		if e = Stove.SetTemp(int(data.StoveTemp)); e != nil {
+			log.Error(e.Error())
+		}
 	}
 
 	if data.StoveStart {
