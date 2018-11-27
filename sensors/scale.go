@@ -41,7 +41,13 @@ func (Scale) setupScale() (*Scale, error) {
 // GetWeight gets the current weight value from teh scale sensor
 func (s *Scale) GetWeight() (float64, error) {
 	log.Info("Getting Scale Reading")
-	ln, err := net.ListenUDP("udp", s.addr)
+	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("SCALE_ADDR"))
+	if err != nil {
+		log.Error(err.Error())
+		return 0, err
+	}
+	ln, err := net.ListenUDP("udp", remoteAddr)
+
 	log.Info("Listening on UDP")
 	if err != nil {
 		log.Error(err.Error())
@@ -53,7 +59,7 @@ func (s *Scale) GetWeight() (float64, error) {
 	var length = 0
 	temp := make([]byte, 128)
 
-	log.Info("ABout to read ln")
+	log.Info("About to read ln")
 	tempLength, err := ln.Read(temp)
 	if err != nil {
 		return 0, err

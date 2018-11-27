@@ -159,7 +159,7 @@ var executeJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.ParseInt(idParam, 10, 0)
+	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		log.Error("Error converting (" + idParam + ") to int")
 		log.Error(err.Error())
@@ -213,11 +213,11 @@ var deleteJob = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.ParseInt(idParam, 10, 0)
+	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil {
 		log.Error("Error converting (" + idParam + ") to int")
 		log.Error(err.Error())
-		handleBadRequest(w, "Error converting ("+idParam+") to int")
+		handleBadRequest(w,err.Error())
 		return
 	}
 
