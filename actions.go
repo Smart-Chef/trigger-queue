@@ -99,6 +99,10 @@ func changeStepStove(i interface{}) {
 	changeStep(i)
 }
 
+func startStove(interface{}) {
+	Stove.StartStove()
+}
+
 // Actions for the trigger-queue to execute
 var Actions = map[string]Action{
 	"setStoveTemp":    setStoveTemp,
@@ -106,4 +110,5 @@ var Actions = map[string]Action{
 	"changeStep":      changeStep,
 	"changeStepStove": changeStepStove,
 	"mockAction":      mockAction,
+	"startStove":      startStove,
 }

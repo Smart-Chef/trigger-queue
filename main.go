@@ -82,6 +82,7 @@ func init() {
 func main() {
 	// Defer cleaning up the Stove
 	defer Stove.Cleanup()
+
 	// Setup Mux
 	r := mux.NewRouter()
 	var wait time.Duration

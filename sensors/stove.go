@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stianeikeland/go-rpio"
 )
 
@@ -48,7 +49,7 @@ func (Stove) setupStove() (*Stove, error) {
 		pin.High()
 	}
 
-	fmt.Println("Done with setup")
+	log.Info("Done setting up stove")
 	return &Stove{
 		name:  "stove",
 		pins:  gpioPins,
