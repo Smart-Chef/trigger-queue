@@ -82,6 +82,8 @@ func init() {
 func main() {
 	// Defer cleaning up the Stove
 	defer Stove.Cleanup()
+	defer Thermometer.Cleanup()
+	defer Scale.Cleanup()
 
 	// Setup Mux
 	r := mux.NewRouter()

@@ -11,73 +11,85 @@ import (
 
 var scaleInstance *Scale
 var scaleOnce sync.Once
+var scaleVal *ScaleValue
+var quitScale chan int
 
 // Scale should be treated as a singleton
 type Scale struct {
 	name string
 	addr *net.UDPAddr
+	conn *net.UDPConn
+}
+
+type ScaleValue struct {
+	val float64
 }
 
 // setupScale connects to the physical sensor
 func (Scale) setupScale() (*Scale, error) {
-	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("SCALE_ADDR"))
-	ln, err := net.ListenUDP("udp", remoteAddr)
+	var err error
+	s := Scale{name: "smart-chef-scale"}
+	scaleVal = &ScaleValue{0}
+	quitScale = make(chan int)
+
+	s.addr, err = net.ResolveUDPAddr("udp", os.Getenv("SCALE_ADDR"))
 	if err != nil {
 		return nil, err
 	}
-	ln.SetReadBuffer(16)
-	ln.SetWriteBuffer(16)
-	log.Infof("Established connection to %s \n", remoteAddr)
-	log.Infof("Local UDP client address : %s \n", ln.LocalAddr().String())
-	// Keep this open all the time?
-	defer ln.Close()
 
-	return &Scale{
-		name: "testScale",
-		addr: remoteAddr,
-	}, nil
+	go s.fetchFromSocket()
+	log.Info("Done setting up scale")
+	return &s, nil
+}
+
+func (*Scale) Cleanup() {
+	quitScale <- 0
+}
+
+func (s *Scale) fetchFromSocket() {
+	var err error
+	s.conn, err = net.ListenUDP("udp", s.addr)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer s.conn.Close()
+
+	for {
+		select {
+		case <-quitScale:
+			log.Info("Closing Scale connection")
+			return
+		default:
+			var buffer []byte
+			var length = 0
+			weight := make([]byte, 128)
+
+			weightength, err := s.conn.Read(weight)
+			if err != nil {
+				log.Error(err.Error())
+				break
+			}
+
+			buffer = weight
+			length = weightength
+
+			log.Info(string(buffer[:length]))
+			value, err := strconv.Atoi(string(buffer[:length]))
+			if err != nil {
+				log.Error("Non-int value received")
+				break
+			}
+			scaleVal.val = float64(value)
+		}
+	}
 }
 
 // GetWeight gets the current weight value from teh scale sensor
 func (s *Scale) GetWeight() (float64, error) {
-	log.Info("Getting Scale Reading")
-	remoteAddr, err := net.ResolveUDPAddr("udp", os.Getenv("SCALE_ADDR"))
-	if err != nil {
-		log.Error(err.Error())
-		return 0, err
-	}
-	ln, err := net.ListenUDP("udp", remoteAddr)
-
-	log.Info("Listening on UDP")
-	if err != nil {
-		log.Error(err.Error())
-		return 0, err
-	}
-	defer ln.Close()
-
-	var buffer []byte
-	var length = 0
-	temp := make([]byte, 128)
-
-	log.Info("About to read ln")
-	tempLength, err := ln.Read(temp)
-	if err != nil {
-		return 0, err
-	}
-
-	log.Info("read ln")
-	buffer = temp
-	length = tempLength
-
-	log.Info("Converting")
-	log.Info(string(buffer[:length]))
-	value, err := strconv.Atoi(string(buffer[:length]))
-	if err != nil {
-		log.Error("Non-int value received")
-		return 0, err
-	}
-
-	return float64(value), nil
+	v := scaleVal.val
+	log.Info("Scale Value: %d", v)
+	return v, nil
 }
 
 // Implement Singleton GetInstance

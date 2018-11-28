@@ -33,6 +33,7 @@ func setupThermometer() (*Thermometer, error) {
 	var err error
 	t := Thermometer{name: "range-driver"}
 	thermVal = &TempValue{0}
+	quitTemp = make(chan int)
 
 	t.addr, err = net.ResolveUDPAddr("udp", os.Getenv("THERMOMETER_ADDR"))
 	if err != nil {
