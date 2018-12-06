@@ -74,7 +74,6 @@ func (s *Scale) fetchFromSocket() {
 			buffer = weight
 			length = weightength
 
-			log.Info(string(buffer[:length]))
 			value, err := strconv.Atoi(string(buffer[:length]))
 			if err != nil {
 				log.Error("Non-int value received")
